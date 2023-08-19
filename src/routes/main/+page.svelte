@@ -43,10 +43,10 @@ function createViewNode(direction, isStart) {
 </script>
 
 <div class="resizer-view-create">
-	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create"></div>
-	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create"></div>
-	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create"></div>
-	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create"></div>
+	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create">⮝</div>
+	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create">⮜</div>
+	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create">⮞</div>
+	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create">⮟</div>
 	<ViewNode {...viewNodes}></ViewNode>
 </div>
 
@@ -58,6 +58,7 @@ function createViewNode(direction, isStart) {
 	height: 100vh;
 	display: flex;
 	align-items: stretch;
+	overflow-y: hidden;
 }
 
 .resizer-create {
@@ -65,6 +66,8 @@ function createViewNode(direction, isStart) {
 	background-color: gray;
 	opacity: 0;
 	transition: opacity 0.4s;
+	color: white;
+	text-align: center;
 }
 
 .resizer-create:hover {
@@ -74,6 +77,7 @@ function createViewNode(direction, isStart) {
 .resizer-horizontal-create {
 	width: 100%;
 	height: 15px;
+	line-height: 15px;
 }
 
 .resizer-horizontal-create0 {
@@ -86,6 +90,7 @@ function createViewNode(direction, isStart) {
 
 .resizer-vertical-create {
 	height: 100%;
+	line-height: 100vh;
 	width: 15px;
 }
 

@@ -1,3 +1,5 @@
+import { ValidationError, invArray } from "../util";
+
 export class DfaConstructor {
 	/**
 	 * @param {string[]|string} alphabet  alphabet to be used 
@@ -11,13 +13,13 @@ export class DfaConstructor {
 			alphabet = alphabet.split("");
 		if (typeof(states) == "string") 
 			states = states.split("");
+
 		this.alphabet = alphabet;
 		/**
 		 * indexing letters from alphabet
-		 * @type {Object.<string, number>}
+		 * @type {Map<string, number>}
 		 */
-		this.fromAlphabetLabel = {};
-		this.alphabet.forEach((x, i) => this.fromAlphabetLabel[x] = i);
+		this.fromAlphabetLabel = invArray(alphabet);
 		/**
 		 * list of state labels
 		 * @type {string[]}
@@ -25,31 +27,32 @@ export class DfaConstructor {
 		this.stateLabels = states;
 		/**
 		 * indexing labels
-		 * @type {Object.<string, number>}
+		 * @type {Map<string, number>}
 		 */
-		this.fromStateLabel = {};
-		states.forEach((x, i) => this.fromStateLabel[x] = i);
+		this.fromStateLabel = invArray(states);
+		if (typeof(starting) == "string") 
+			starting = this.fromStateLabel.get(starting) ??
+				ValidationError.throw_("starting state is not part of states");
+		if (typeof endStates[0] == "string") 
+			// @ts-ignore
+			endStates = endStates.map(x => this.getState(x));
 		/**
 		 * transition function as a matrix
 		 * @type {number[][]}
 		 */
 		this.transitions = transitions;
-		if (typeof(starting) == "string") {
-			this.start = this.fromStateLabel[starting];
-		} else {
-			this.start = starting;
-		}
-		if (typeof endStates[0] == "string") {
-			/**
-			 * list of end states
-			 * @type {number[]}
-			 */
-			this.endStates = endStates.map(x => this.fromStateLabel[x]);
-		} else {
-			// @ts-ignore
-			this.endStates = endStates;
-		}
-
+		/**
+		 * transition function as a matrix
+		 * @type {number}
+		 */
+		// @ts-ignore
+		this.start = starting;
+		/**
+		 * transition function as a matrix
+		 * @type {number[]}
+		 */
+		// @ts-ignore
+		this.endStates = endStates;
 	}
 
 	/**
@@ -58,10 +61,22 @@ export class DfaConstructor {
 	 * @param {number|string} with_ letter to transition with
 	 */
 	setTransition(from, to, with_){
-		let fromInt = typeof(from) == "string" ? this.fromStateLabel[from] : from;
-		let toInt = typeof(to) == "string" ? this.fromStateLabel[to] : to;
-		let withInt = typeof(with_) == "string" ? this.fromAlphabetLabel[with_] : with_;
+		let fromInt = this.getState(from);
+		let toInt = this.getState(to);
+		let withInt = this.getState(with_, this.fromAlphabetLabel);
 		this.transitions[fromInt][withInt] = toInt;
+	}
+
+	/**
+	 * @param {string | number} s
+	 * @param {Map<string, number>?} set to convert it to
+	 * @returns {number}
+	 */
+	getState(s, set = null){
+		if (set === null) {
+			set = this.fromStateLabel;
+		}
+		return typeof(s) == "string" ? ValidationError.throw_(`state ${s} doesn't exist`, this.fromStateLabel.get(s)) : s;
 	}
 }
 
@@ -81,6 +96,9 @@ export class Dfa {
 			this.setWord(word);
 		}
 		this.index = 0;
+		/**
+		 * @type {number}
+		 */
 		this.currentState = this.param.start;
 	}
 
@@ -95,11 +113,11 @@ export class Dfa {
 		if (typeof(word) == "string") {
 			word = word.split("");
 		}
-		let res = word.find(x => this.param.fromAlphabetLabel[x] !== undefined);
+		let res = word.find(x => this.param.fromAlphabetLabel.get(x) !== undefined);
 		if (res !== undefined) {
 			return `${res} not part of the alphabet! Please change the word or the alphabet accordingly`;
 		}
-		this.word = word.map(x => this.param.fromAlphabetLabel[x]);
+		this.word = word.map(x => this.param.getState(x, this.param.fromAlphabetLabel));
 		return "ok";
 	}
 
@@ -127,59 +145,6 @@ export class DfaViewModel extends Dfa {
 	}
 }
 
-/**
- * @param {?number} max - excluded maximum
- * @param {number} min - included minimum
- * @returns {number}
- */
-function getRandom(min, max = null) {
-	if (max === null) {
-		max = min;
-		min = 0;
-	}
-	return Math.random() * (max - min) + min;
-}
 
-/**
- * @param {(number|[number,number])[]} bounds
- * @returns {number[]}
- */
-function getRandomPoint(bounds){
-	return bounds.map(x => typeof x === "number"? getRandom(0, x) : getRandom(x[0], x[1]));
-}
 
-/**
- * @param {number[]} indexes
- * @param {number[]} bounds
- */
-function combineIndex(indexes, bounds){
-	let resultingIndex = 0;
-	let factor = 1;
-	indexes.forEach((x, i) => {
-		resultingIndex += x * factor;
-		factor *= bounds[i];
-	});
-	return resultingIndex;
-}
 
-/**
- * @param {any} radius
- * @param {any} tries
- * @param {any} max
- * @param {number[]} bounds
- */
-function poissonDiskSampling(radius, tries, max, bounds) {
-	let dim = bounds.length;
-	let cellsize = ~~ (radius/Math.sqrt(dim))
-	let cellbounds = bounds.map(x => Math.ceil(x / cellsize) + 1);
-	let grid = Array(cellbounds.reduce((x, acc) => x * acc)).fill(0);
-	let insertIntoGrid = (/** @type {number[]} */ point) => 
-		grid[combineIndex(point.map(x => ~~(x / cellsize)), cellbounds)] = point;
-	let points = [];
-	let active = [];
-
-	let initialPoint = getRandomPoint(bounds);
-	insertIntoGrid(initialPoint);
-	points.push(initialPoint);
-	active.push(initialPoint);
-}

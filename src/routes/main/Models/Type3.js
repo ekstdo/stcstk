@@ -1,4 +1,4 @@
-import { ValidationError, invArray } from "../util";
+import { UndefinedError, invArray, poissonDiskSampling } from "../util";
 
 export class DfaConstructor {
 	/**
@@ -32,7 +32,7 @@ export class DfaConstructor {
 		this.fromStateLabel = invArray(states);
 		if (typeof(starting) == "string") 
 			starting = this.fromStateLabel.get(starting) ??
-				ValidationError.throw_("starting state is not part of states");
+				UndefinedError.throw_("starting state is not part of states");
 		if (typeof endStates[0] == "string") 
 			// @ts-ignore
 			endStates = endStates.map(x => this.getState(x));
@@ -76,7 +76,7 @@ export class DfaConstructor {
 		if (set === null) {
 			set = this.fromStateLabel;
 		}
-		return typeof(s) == "string" ? ValidationError.throw_(`state ${s} doesn't exist`, this.fromStateLabel.get(s)) : s;
+		return typeof(s) == "string" ? UndefinedError.throw_(`state ${s} doesn't exist`, this.fromStateLabel.get(s)) : s;
 	}
 }
 
@@ -141,7 +141,7 @@ export class DfaViewModel extends Dfa {
 	 */
 	constructor(dfaConstructor, word = null){
 		super(dfaConstructor, word);
-		this.positions = [];
+		this.positions = poissonDiskSampling(50, 30, dfaConstructor.stateLabels.length);
 	}
 }
 

@@ -10,7 +10,9 @@
 	</defs>
 			
 	<rect width="100%" height="100%" style="fill: var(--color-bg-0)" />
-	<rect width="100%" height="100%" fill="url(#grid)" />
+	<rect width="100%" height="100%" fill="url(#grid)"/>
+
+	<slot/>
 </svg>
 
 

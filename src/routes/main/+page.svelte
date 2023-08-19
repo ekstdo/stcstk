@@ -3,15 +3,17 @@
 import * as Types from "./types.js"
 import SvgView from "./SvgView.svelte";
 import ViewNode from "./ViewNode.svelte";
+	import DfaView from "./DfaView.svelte";
 
 /**
  * current viewnodes, that should be displayed
  * @prop {any} component main view to be displayed
  * @prop {[]any} children main view to be displayed
+ * @prop {any} data - data to be displayed
  */
 let viewNodes = {
-	component: SvgView,
-	data: {},
+	component: DfaView,
+	data: {model: "dfa-1"},
 	children: [],
 	direction: Types.directionStates.HORIZONTAL
 };

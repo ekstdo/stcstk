@@ -167,18 +167,35 @@ export function vecAdd(p1, p2){
 }
 
 /**
- * @param {number | number[]} a
- * @param {number | number[]} b
+ * @param {number} a
+ * @param {number} b
+ * @returns {number}
+ *//**
+ * @param {number[]} a
+ * @param {number[]} b
+ * @returns {number}
+ *//**
+ * @param {number[]} a
+ * @param {number} b
+ * @returns {number[]}
+ *//**
+ * @param {number} a
+ * @param {number[]} b
  * @returns {number[]}
  */
+// function overloading, please work for once
 export function dot(a, b){
 	/** @type {function(number): number} */
-	let bGet = typeof b === "number" ? _ => b : ind => b[ind];
 	if (typeof a == "number")
 		if (typeof b == "number")
-			return [a * b];
+			// @ts-ignore
+			return a * b;
 		else return b.map(x => x * a);
-	return a.map((x, ind) => x * bGet(ind));
+	else if (typeof b == "number")
+		// @ts-ignore
+		return a.map(x => x * b);
+	// @ts-ignore
+	return a.reduce((acc, i, ind) => acc + i * b[ind], 0);
 }
 
 /**
@@ -228,6 +245,7 @@ export function poissonDiskSampling(radius, tries, max, bounds = null) {
 			// not really uniform
 			// but we want some bias towards the center anyway
 			let randomDist = getRandom(radius, 2.0 * radius);
+			// @ts-ignore
 			let newRandomPoint = vecAdd(randomPoint, dot(randomAngle, randomDist));
 			if (isWithin(newRandomPoint, bounds) && isValidPoint(grid, newRandomPoint, radius)){
 				registerPoint(newRandomPoint);
@@ -243,4 +261,28 @@ export function poissonDiskSampling(radius, tries, max, bounds = null) {
 	}
 
 	return points;
+}
+
+
+/**
+ * calculates the translation, scale and rotation
+ * from a pinch gesture
+ * @param {[number,number]} from1
+ * @param {[number,number]} from2
+ * @param {[number,number]} to1
+ * @param {[number,number]} to2
+ * @returns {[number, number, number, number]}
+ */
+export function calcPinchTrans(from1, from2, to1, to2){
+	let translation = [to1[0] - from1[0], to1[1] - from1[1]];
+	let translatedFrom2 = [from2[0] - from1[0], from2[1] - from1[1]];
+	let translatedTo2 = [to2[0] - to1[0], to2[1] - to1[1]];
+	let tf2a = distance(translatedFrom2); // this should never become zero UI wise
+	let tt2a = distance(translatedTo2);
+	translation.push(tf2a == 0? 1. :tt2a / tf2a); // still having this check tho
+	// @ts-ignore
+	let angle = Math.acos(dot(translatedFrom2, translatedTo2) / tf2a / tt2a)
+	translation.push(angle);
+	// @ts-ignore
+	return translation;
 }

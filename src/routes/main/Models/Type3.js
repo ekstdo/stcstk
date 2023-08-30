@@ -125,11 +125,11 @@ export class Dfa {
 		if (this.word !== null) {
 			this.currentState = this.param.transitions[this.currentState][this.word[this.index++]];
 			return "ok"
-		} else 
-			return `word is null`
+		}  
+		return `word is null`
 	}
 
-	isAccepted(){
+	isAcceptedState(){
 		return this.param.endStates.includes(this.currentState);
 	}
 }
@@ -141,7 +141,22 @@ export class DfaViewModel extends Dfa {
 	 */
 	constructor(dfaConstructor, word = null){
 		super(dfaConstructor, word);
-		this.positions = poissonDiskSampling(50, 30, dfaConstructor.stateLabels.length);
+		this.positions = poissonDiskSampling(80, 30, dfaConstructor.stateLabels.length);
+	}
+
+	getConnections(){
+		let result = new Map();
+		for (let stateFrom = 0; stateFrom < this.param.transitions.length; stateFrom ++) {
+			for (let action = 0; action < this.param.transitions[0].length; action++){
+				let stateTo = this.param.transitions[stateFrom][action];
+				if (result.get(stateFrom) === undefined)
+					result.set(stateFrom, new Map());
+				if (result.get(stateFrom).get(stateTo) === undefined)
+					result.get(stateFrom).set(stateTo, new Set());
+				result.get(stateFrom).get(stateTo).add(action);
+			}
+		}
+		return result;
 	}
 }
 

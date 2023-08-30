@@ -8,14 +8,15 @@ import ViewNode from "./ViewNode.svelte";
 /**
  * current viewnodes, that should be displayed
  * @prop {any} component main view to be displayed
- * @prop {[]any} children main view to be displayed
+ * @prop {any[]} children main view to be displayed
  * @prop {any} data - data to be displayed
  */
 let viewNodes = {
 	component: DfaView,
 	data: {model: "dfa-1"},
 	children: [],
-	direction: Types.directionStates.HORIZONTAL
+	direction: Types.directionStates.HORIZONTAL,
+	isLeaf: true
 };
 
 /**
@@ -26,29 +27,43 @@ let viewNodes = {
  */
 // @ts-ignore
 function createViewNode(direction, isStart) {
-	if (direction != viewNodes.direction) {
+	if (direction != viewNodes.direction || viewNodes.isLeaf) {
 		viewNodes = {
 			// @ts-ignore
 			component: undefined,
+			// @ts-ignore
 			data: {},
 			// @ts-ignore
 			children: [viewNodes],
-			direction
+			direction,
+			isLeaf: false
 		}
 	}
 
+	let el = {
+		component: DfaView,
+		data: {model: "dfa-1"},
+		children: [],
+		direction: Types.directionStates.HORIZONTAL,
+		isLeaf: true
+	};
 	if (isStart){
-		viewNodes.children.unshift()
+		// @ts-ignore
+		viewNodes.children.unshift(el)
+	} else {
+		// @ts-ignore
+		viewNodes.children.push(el);
 	}
+	viewNodes = viewNodes;
 
 }
 </script>
 
 <div class="resizer-view-create">
-	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create">⮝</div>
-	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create">⮜</div>
-	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create">⮞</div>
-	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create">⮟</div>
+	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, false)}>⮝</div>
+	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, false)}>⮜</div>
+	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, true)}>⮞</div>
+	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, true)}>⮟</div>
 	<ViewNode {...viewNodes}></ViewNode>
 </div>
 

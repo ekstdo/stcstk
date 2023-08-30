@@ -43,7 +43,7 @@ export let size = 100;
 <div style="--size: {size}px" class={`viewnode viewnode-${directionString}`}>
 	{#each children as child, index}
 		{#if index != 0}
-			<div class={`resizer resizer-${directionString}`}></div>
+			<div class={`resizer resizer-${directionString}`}> <div></div> </div>
 		{/if}
 		<svelte:self {...child}/>
 	{/each}
@@ -64,4 +64,19 @@ export let size = 100;
 	flex-direction: column;
 }
 
+.resizer {
+	transition: background-color 0.4s;
+}
+
+.resizer:hover {
+	background-color: var(--color-theme-1);
+}
+
+.resizer-vertical > div {
+	height: 5px;
+}
+
+.resizer-horizontal > div {
+	width: 5px;
+}
 </style>

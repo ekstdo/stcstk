@@ -1,23 +1,50 @@
 <script>
 // @ts-ignore
 import * as Types from "./types.js"
+import { propagateResize } from "./util.js"
 import SvgView from "./SvgView.svelte";
 import ViewNode from "./ViewNode.svelte";
-	import DfaView from "./DfaView.svelte";
+import DfaView from "./DfaView.svelte";
+import { onMount } from "svelte";
 
 /**
  * current viewnodes, that should be displayed
- * @prop {any} component main view to be displayed
- * @prop {any[]} children main view to be displayed
- * @prop {any} data - data to be displayed
+ * @property {any} component main view to be displayed
+ * @property {any[]} children main view to be displayed
+ * @property {any} data - data to be displayed
+ * @property {number?} width - width
+ * @property {number?} height - height
  */
 let viewNodes = {
 	component: DfaView,
 	data: {model: "dfa-1"},
 	children: [],
-	direction: Types.directionStates.HORIZONTAL,
-	isLeaf: true
+	direction: Types.viewnodeStates.LEAF,
+	width: 0,
+	height: 0
 };
+
+/**
+ * @type {Element}
+ */
+let el; 
+
+onMount(() => {
+	const resizeObserver = new ResizeObserver(entries => {
+		for (const entry of entries){
+			viewNodes.width = window.innerWidth;
+			viewNodes.height = window.innerHeight;
+		}
+	});
+	resizeObserver.observe(el);
+
+	viewNodes.width = window.innerWidth;
+	viewNodes.height = window.innerHeight;
+})
+
+
+
+
 
 /**
  * splits a viewnode or appends a new one to the list 
@@ -27,7 +54,8 @@ let viewNodes = {
  */
 // @ts-ignore
 function createViewNode(direction, isStart) {
-	if (direction != viewNodes.direction || viewNodes.isLeaf) {
+	if (direction != viewNodes.direction || viewNodes.direction === Types.viewnodeStates.LEAF) {
+
 		viewNodes = {
 			// @ts-ignore
 			component: undefined,
@@ -36,7 +64,15 @@ function createViewNode(direction, isStart) {
 			// @ts-ignore
 			children: [viewNodes],
 			direction,
-			isLeaf: false
+			width: viewNodes.width,
+			height: viewNodes.height
+		}
+		if (direction == Types.directionStates.HORIZONTAL){
+			// @ts-ignore
+			delete viewNodes.children[0].height;
+		} else {
+			// @ts-ignore
+			delete viewNodes.children[0].width;
 		}
 	}
 
@@ -44,27 +80,31 @@ function createViewNode(direction, isStart) {
 		component: DfaView,
 		data: {model: "dfa-1"},
 		children: [],
-		direction: Types.directionStates.HORIZONTAL,
-		isLeaf: true
+		direction: Types.viewnodeStates.LEAF,
 	};
 	if (isStart){
 		// @ts-ignore
-		viewNodes.children.unshift(el)
+		viewNodes.children.unshift(el);
 	} else {
 		// @ts-ignore
 		viewNodes.children.push(el);
 	}
+
+	propagateResize(viewNodes, direction, {width: viewNodes.width,  height: viewNodes.height});
+
 	viewNodes = viewNodes;
+
+	console.log(viewNodes);
 
 }
 </script>
 
-<div class="resizer-view-create">
+<div bind:this={el} class="resizer-view-create">
 	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, false)}>⮝</div>
 	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, false)}>⮜</div>
 	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, true)}>⮞</div>
 	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, true)}>⮟</div>
-	<ViewNode {...viewNodes}></ViewNode>
+	<ViewNode id={[0]} {...viewNodes}></ViewNode>
 </div>
 
 
@@ -73,9 +113,7 @@ function createViewNode(direction, isStart) {
 .resizer-view-create {
 	position: relative;
 	height: 100vh;
-	display: flex;
 	align-items: stretch;
-	overflow-y: hidden;
 }
 
 .resizer-create {
@@ -93,7 +131,7 @@ function createViewNode(direction, isStart) {
 
 .resizer-horizontal-create {
 	width: 100%;
-	height: 15px;
+	height: 17px;
 	line-height: 15px;
 }
 
@@ -108,7 +146,7 @@ function createViewNode(direction, isStart) {
 .resizer-vertical-create {
 	height: 100%;
 	line-height: 100vh;
-	width: 15px;
+	width: 17px;
 }
 
 .resizer-vertical-create0 {

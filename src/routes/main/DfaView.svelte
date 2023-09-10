@@ -13,6 +13,7 @@
 	$: mod = models[model];
 
 	let mounted = false;
+	let zoom = 1.0;
 
 	onMount(() => {
 		mounted = true;
@@ -92,6 +93,9 @@
 		ev.stopPropagation();
 		let selectInd = selected.indexOf(index);
 
+		window.addEventListener("mousemove", mousemove);
+		window.addEventListener("mouseup", mouseup);
+
 		if (ev.shiftKey) {
 			if (selectInd !== -1) {
 				maybeDeselect = selectInd;
@@ -108,21 +112,20 @@
 	/**
 	 * @param {any} ev
 	 */
-	function mousemove({ detail: ev }){
+	function mousemove(ev){
 		if (!pressed) return;
-		if (isNaN(ev.movementX)) return;
 		moved = true;
 		// @ts-ignore
 		for (let i of selected) {
-			$mod.positions[i][0] += ev.movementX;
-			$mod.positions[i][1] += ev.movementY;
+			$mod.positions[i][0] += ev.movementX * zoom;
+			$mod.positions[i][1] += ev.movementY * zoom;
 		}
 	}
 
 	/**
 	 * @param {any} _ev
 	 */
-	function mouseup({detail: _ev}) {
+	function mouseup(_ev) {
 		pressed = false;
 		if (maybeDeselect !== -1 && !moved) {
 			selected.splice(maybeDeselect, 1);
@@ -131,6 +134,8 @@
 		maybeDeselect = -1;
 		moved = false;
 
+		window.removeEventListener("mousemove", mousemove);
+		window.removeEventListener("mouseup", mouseup);
 	}
 
 	/**
@@ -145,7 +150,7 @@
 
 
 
-<SvgView on:mousemove={mousemove} on:mouseup={mouseup} on:mousedown={globalMousedown}>
+<SvgView on:mousedown={globalMousedown} bind:currentZoomLevel={zoom}>
 	{#each $mod.getConnections() as [from, fromMap]}
 		{#each fromMap as [to, toSet]}
 			{@const paths = toPath(from, to)}
@@ -156,11 +161,11 @@
 	{/each}
 	{#each $mod.positions as pos, index}
 		<g>
-			<circle cx={pos[0]} cy={pos[1]} r={circleRadius} class={"usual-circle" + (selected.includes(index)? " selected-circle" : "")} on:mouseup={mouseup} on:mousedown={ev=>mousedown(index, ev)} on:mousemove={mousemove}></circle>
+			<circle cx={pos[0]} cy={pos[1]} r={circleRadius} class={"usual-circle" + (selected.includes(index)? " selected-circle" : "")} on:mousedown={ev=>mousedown(index, ev)}></circle>
 			{#if index === $mod.param.start}
 				<path class="transition-line" d={`M ${pos[0] - 2 * circleRadius},${pos[1]} L ${pos[0] - circleRadius - 15},${pos[1]}`} marker-end="url(#arrowhead)"/>
 			{/if}
-			<text x={pos[0]} y={pos[1]}  on:mouseup={mouseup} text-anchor="middle" class="usual-dfa-state-label">{$mod.param.stateLabels[index]}</text>
+			<text x={pos[0]} y={pos[1]} text-anchor="middle" class="usual-dfa-state-label">{$mod.param.stateLabels[index]}</text>
 		</g>
 	{/each}
 </SvgView>

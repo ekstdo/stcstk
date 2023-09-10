@@ -16,8 +16,8 @@ const evCache = [];
 let prevDiff = -1;
 
 
-let currentZoomLevel = 1.0;
-let currentTranslation = [0, 0];
+export let currentZoomLevel = 1.0;
+export let currentTranslation = [0, 0];
 
 let cachedZoomLevel = 1.0;
 let cachedTranslation = [0, 0];
@@ -42,13 +42,11 @@ onMount(() => {
 		for (const entry of entries){
 			svgWidth = entry.contentRect.width;
 			svgHeight = entry.contentRect.height;
-			console.log("resize?");
 		}
 	});
 	resizeObserver.observe(svgElem);
 	svgWidth = svgElem.getBoundingClientRect().width;
 	svgHeight = svgElem.getBoundingClientRect().height;
-	console.log(svgElem, svgViewBox, svgWidth / currentZoomLevel + currentTranslation[0]);
 	svgViewBox = `${currentTranslation[0] / currentZoomLevel} ${currentTranslation[1] / currentZoomLevel} ${(svgWidth + currentTranslation[0]) / currentZoomLevel } ${(svgHeight + currentTranslation[1]) / currentZoomLevel}`;
 })
 
@@ -87,7 +85,6 @@ function wheel(e) {
 		currentTranslation[0] = (currentTranslation[0] - a) * currentZoomLevel / nextZoomLevel + a;
 		currentTranslation[1] = (currentTranslation[1] - b) * currentZoomLevel / nextZoomLevel + b;
 		currentZoomLevel = nextZoomLevel;
-		console.log(currentZoomLevel);
 	}
 	else {
 		currentTranslation[0] -= e.deltaX * 2 / currentZoomLevel;
@@ -129,9 +126,15 @@ const mousedown = (/** @type {MouseEvent} */ ev) => dispatch('mousedown', ev );
 		</marker>
 	</defs>
 			
-	<rect x={currentTranslation[0]} y={currentTranslation[1]} width={rectWidth} height={rectHeight} fill="url(#grid)"/>
+	<rect x={currentTranslation[0]} y={currentTranslation[1]} width="100%" height="100%" fill="url(#grid)"/>
 
 	<slot/>
 </svg>
 
 
+<style>
+svg {
+	display: block;
+
+}
+</style>

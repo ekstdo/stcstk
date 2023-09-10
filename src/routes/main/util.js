@@ -1,3 +1,6 @@
+import * as Types from "./types.js"
+
+
 /**
  * @function
  * @template T
@@ -285,4 +288,32 @@ export function calcPinchTrans(from1, from2, to1, to2){
 	translation.push(angle);
 	// @ts-ignore
 	return translation;
+}
+
+const tweenResizerSize = 5;
+/**
+ * @param {any} node
+ * @param {number} direction
+ * @param {{width: number; height: number;}} currentSize
+ */
+export function propagateResize(node, direction, currentSize) {
+	if (node.children === undefined || node.children.length == 0)
+		return;
+
+	let width = node.width ?? currentSize.width;
+	let height = node.height ?? currentSize.height;
+
+	if (node.direction == direction) {
+		if (direction == Types.directionStates.HORIZONTAL) {
+			let a = ((currentSize.width - tweenResizerSize * (node.children.length - 1)))/node.children.length;
+			// @ts-ignore
+			node.children.forEach(el => { el.width = a; propagateResize(el, direction, {width, height}) } );
+		} else {
+			let a = ((currentSize.height - tweenResizerSize * (node.children.length - 1))/node.children.length);
+			// @ts-ignore
+			node.children.forEach(el => { el.height = a; propagateResize(el, direction, {width, height}) } );
+		}
+	} else {
+		node.children.forEach((/** @type {{ data?: { model: string; } | undefined; children: any; direction: any; width: any; height: any; }} */ el) => propagateResize(el, direction, {width, height}))
+	}
 }

@@ -8,7 +8,6 @@
 		<slot />
 {:else}
 <div class="app">
-	<Header />
 
 	<main>
 		<slot />

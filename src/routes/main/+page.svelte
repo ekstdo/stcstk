@@ -6,6 +6,7 @@ import SvgView from "./SvgView.svelte";
 import ViewNode from "./ViewNode.svelte";
 import DfaView from "./DfaView.svelte";
 import { onMount } from "svelte";
+	import ContextMenu from "./ContextMenu.svelte";
 
 /**
  * current viewnodes, that should be displayed
@@ -32,8 +33,14 @@ let el;
 onMount(() => {
 	const resizeObserver = new ResizeObserver(entries => {
 		for (const entry of entries){
-			viewNodes.width = window.innerWidth;
-			viewNodes.height = window.innerHeight;
+			if (viewNodes.width !== window.innerWidth){
+				viewNodes.width = window.innerWidth;
+				propagateResize(viewNodes, Types.viewnodeStates.HORIZONTAL, {width: viewNodes.width,  height: viewNodes.height});
+			}
+			if (viewNodes.height !== window.innerHeight){
+				viewNodes.height = window.innerHeight;
+				propagateResize(viewNodes, Types.viewnodeStates.VERTICAL, {width: viewNodes.width,  height: viewNodes.height});
+			}
 		}
 	});
 	resizeObserver.observe(el);
@@ -42,7 +49,28 @@ onMount(() => {
 	viewNodes.height = window.innerHeight;
 })
 
+/** @type{[number, number] | undefined} */
+let showDisplayMenu = undefined;
 
+
+/**
+ * @param {PointerEvent} ev
+ */
+function onctxMenu(ev) {
+	ev.preventDefault();
+	/**
+	 * @param {MouseEvent} ev
+	 */
+	function undoFunc(ev){
+		showDisplayMenu = undefined;
+		// @ts-ignore
+		ev.currentTarget.removeEventListener(undoFunc);
+	}
+	// @ts-ignore
+	ev.target.addEventListener("click", undoFunc);
+	showDisplayMenu = [ev.x, ev.y];
+	return false;
+}
 
 
 
@@ -91,20 +119,23 @@ function createViewNode(direction, isStart) {
 	}
 
 	propagateResize(viewNodes, direction, {width: viewNodes.width,  height: viewNodes.height});
-
 	viewNodes = viewNodes;
-
-	console.log(viewNodes);
-
 }
+
+
+
 </script>
 
-<div bind:this={el} class="resizer-view-create">
+<div bind:this={el} class="resizer-view-create" on:contextmenu={onctxMenu}>
 	<div class="resizer-create resizer-horizontal-create1 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, false)}>⮝</div>
 	<div class="resizer-create resizer-vertical-create1 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, false)}>⮜</div>
 	<div class="resizer-create resizer-vertical-create0 resizer-vertical-create" on:click={ev => createViewNode(Types.directionStates.HORIZONTAL, true)}>⮞</div>
 	<div class="resizer-create resizer-horizontal-create0 resizer-horizontal-create" on:click={ev => createViewNode(Types.directionStates.VERTICAL, true)}>⮟</div>
 	<ViewNode id={[0]} {...viewNodes}></ViewNode>
+
+	{#if showDisplayMenu !== undefined}
+		<ContextMenu x={showDisplayMenu[0]} y={showDisplayMenu[1]}></ContextMenu>
+	{/if}
 </div>
 
 

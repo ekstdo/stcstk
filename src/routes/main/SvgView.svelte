@@ -78,7 +78,8 @@ function pointerMove(ev){
 function wheel(e) {
 	e.preventDefault();
 	if (e.ctrlKey) {
-		let nextZoomLevel = currentZoomLevel - e.deltaY * 0.01;
+		let factor = e.shiftKey ? 0.001 : 0.01;
+		let nextZoomLevel = currentZoomLevel - e.deltaY * factor;
 		let a = currentTranslation[0] + e.offsetX / currentZoomLevel;
 		let b = currentTranslation[1] + e.offsetY / currentZoomLevel;
 
@@ -87,8 +88,15 @@ function wheel(e) {
 		currentZoomLevel = nextZoomLevel;
 	}
 	else {
-		currentTranslation[0] -= e.deltaX * 2 / currentZoomLevel;
-		currentTranslation[1] -= e.deltaY * 2 / currentZoomLevel;
+		let factor = e.shiftKey && e.deltaX != 0 ? 0.2 : 2;
+		currentTranslation[0] -= 
+			e.shiftKey && e.deltaX == 0 ?
+			e.deltaY * factor / currentZoomLevel :
+			e.deltaX * factor / currentZoomLevel;
+		currentTranslation[1] -=
+			e.shiftKey && e.deltaX == 0 ?
+			0 :
+			e.deltaY * factor / currentZoomLevel;
 	}
 }
 
@@ -101,8 +109,6 @@ function removeEvent(ev){
 }
 
 $: svgViewBox = `${currentTranslation[0]} ${currentTranslation[1]} ${svgWidth / currentZoomLevel} ${svgHeight / currentZoomLevel}`;
-$: rectWidth = ~~(svgWidth / currentZoomLevel) + 1
-$: rectHeight = ~~(svgHeight / currentZoomLevel) + 1
 
 const dispatch = createEventDispatcher();
 const mousemove = (/** @type {MouseEvent} */ ev) => dispatch('mousemove', ev );

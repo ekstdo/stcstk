@@ -33,6 +33,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"iconoir": "^6.11.0",
 		"svelte-watch-resize": "^1.0.3"
 	}
 }
